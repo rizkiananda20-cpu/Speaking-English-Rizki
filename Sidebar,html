@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      button.recording {
+        background-color: #f44336;
+      }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      #status {
+        margin-top: 15px;
+        font-style: italic;
+        color: #555;
+      }
+      .log {
+        margin-top: 20px;
+        font-size: 14px;
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 5px;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
+      .input-group {
+        margin-bottom: 15px;
+      }
+      label {
+        font-size: 12px;
+        font-weight: bold;
+      }
+      input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>AI Voice Assistant</h3>
+    
+    <div class="input-group">
+      <label for="apiKey">Gemini API Key:</label>
+      <input type="password" id="apiKey" placeholder="Masukkan API Key Anda">
+    </div>
+
+    <button id="recordBtn" onclick="toggleRecording()">Mulai Bicara</button>
+    <div id="status">Status: Menunggu...</div>
+    
+    <div class="log" id="chatLog">
+      <strong>Riwayat Percakapan:</strong><br>
+    </div>
+
+    <script>
+      // Konfigurasi API
+      const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+
+      // Variabel Global
+      let isRecording = false;
+      let recognition;
+
+      // Inisialisasi Web Speech API (Perekam Suara bawaan Browser)
+      if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false; // Berhenti setelah pengguna selesai berbicara satu kalimat
+        recognition.interimResults = false;
+        recognition.lang = 'id-ID'; // Bahasa Indonesia
+
+        recognition.onstart = function() {
+          updateStatus('Mendengarkan...');
+        };
+
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          handleUserSpeech(transcript);
+        };
+
+        recognition.onerror = function(event) {
+          updateStatus('Error: ' + event.error);
+          stopRecordingUI();
+        };
+
+        recognition.onend = function() {
+          if (isRecording) {
+            updateStatus('Memproses...');
+          } else {
+             updateStatus('Status: Menunggu...');
+          }
+        };
+      } else {
+        alert("Browser Anda tidak mendukung Web Speech API. Gunakan Google Chrome.");
+        document.getElementById('recordBtn').disabled = true;
+      }
+
+      function updateStatus(message) {
+        document.getElementById('status').innerText = message;
+      }
+
+      function appendToLog(role, text) {
+        const logDiv = document.getElementById('chatLog');
+        logDiv.innerHTML += `<b>${role}:</b> ${text}<br><br>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function toggleRecording() {
+        if (!recognition) return;
+
+        const apiKey = document.getElementById('apiKey').value;
+        if (!apiKey) {
+          alert("Silakan masukkan Gemini API Key terlebih dahulu.");
+          return;
+        }
+
+        const btn = document.getElementById('recordBtn');
+
+        if (!isRecording) {
+          recognition.start();
+          isRecording = true;
+          btn.innerText = "Berhenti Bicara";
+          btn.classList.add('recording');
+        } else {
+          recognition.stop();
+          stopRecordingUI();
+        }
+      }
+
+      function stopRecordingUI() {
+        isRecording = false;
+        const btn = document.getElementById('recordBtn');
+        btn.innerText = "Mulai Bicara";
+        btn.classList.remove('recording');
+        updateStatus('Status: Menunggu...');
+      }
+
+      // Alur Utama: Tangani Suara Pengguna -> Kirim ke Google Doc -> Kirim ke Gemini
+      async function handleUserSpeech(transcript) {
+        stopRecordingUI();
+        updateStatus('Menghubungi AI...');
+        
+        appendToLog('Anda', transcript);
+        google.script.run.appendTextToDoc('User', transcript);
+        await getGeminiResponse(transcript);
+      }
+
+      async function getGeminiResponse(userText) {
+        const apiKey = document.getElementById('apiKey').value;
+        const url = `${GEMINI_API_URL}?key=${apiKey}`;
+
+        const prompt = `Anda adalah asisten AI yang membantu. Jawablah dengan singkat, ramah, dan gunakan bahasa Indonesia. Pengguna mengatakan: "${userText}"`;
+
+        const requestBody = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          let aiText = "Maaf, saya tidak mengerti.";
+          
+          if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
+             aiText = data.candidates[0].content.parts[0].text;
+          }
+
+          handleAIResponse(aiText);
+
+        } catch (error) {
+          console.error("Gemini API Error:", error);
+          updateStatus('Gagal menghubungi AI.');
+          alert("Gagal menghubungi Gemini API. Periksa API Key Anda.");
+        }
+      }
+
+      function handleAIResponse(aiText) {
+        updateStatus('Status: Menunggu...');
+        appendToLog('AI', aiText);
+        google.script.run.appendTextToDoc('AI', aiText);
+        speakText(aiText);
+      }
+
+      function speakText(text) {
+        if ('speechSynthesis' in window) {
+          const cleanText = text.replace(/[*#]/g, ''); 
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.lang = 'id-ID';
+          utterance.rate = 1.0; 
+          window.speechSynthesis.speak(utterance);
+        } else {
+           console.log("Text-to-speech tidak didukung browser ini.");
+        }
+      }
+    </script>
+  </body>
+</html>
