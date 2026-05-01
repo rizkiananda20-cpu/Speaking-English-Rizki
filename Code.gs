@@ -1,5 +1,3 @@
-(Skrip backend untuk Google Apps Script)
-
 /**
  * Fungsi ini berjalan secara otomatis ketika Google Docs dibuka.
  * Ini akan membuat menu kustom di bagian atas (Toolbar).
