@@ -1,9 +1,8 @@
-# Asisten AI Suara untuk Google Docs (100% Gratis)
+# Asisten AI untuk Google Docs (100% Gratis)
 
 Aplikasi ini adalah add-on kustom untuk Google Docs yang memungkinkan Anda berbicara dengan AI secara langsung. Suara Anda dan balasan AI akan secara otomatis ditranskripsi dan ditulis ke dalam dokumen Google Docs Anda.
 
 Aplikasi ini dirancang untuk menjadi **100% gratis** menggunakan alat bawaan browser dan API gratis:
-- **Speech-to-Text (Pengenalan Suara)**: Menggunakan Web Speech API bawaan Google Chrome.
 - **AI Engine (Otak AI)**: Menggunakan Google Gemini API (tier gratis).
 - **Text-to-Speech (Suara AI)**: Menggunakan Web Speech Synthesis bawaan Google Chrome.
 - **Integrasi Dokumen**: Menggunakan Google Apps Script.
@@ -43,9 +42,9 @@ Agar AI bisa menjawab, Anda memerlukan kunci khusus (API Key) dari Google.
 4. *Catatan: Pertama kali dijalankan, Google mungkin akan meminta izin akses (Authorization Required). Klik "Continue", pilih akun Google Anda, klik "Advanced", lalu klik "Go to Untitled project (unsafe)" dan klik "Allow".*
 5. Sidebar "Asisten AI Suara" akan terbuka di sebelah kanan layar.
 
-### Langkah 5: Mulai Berbicara!
+### Langkah 5: Mulai Berkirim Pesan!
 1. Di sidebar sebelah kanan, tempelkan (paste) **Gemini API Key** yang sudah Anda dapatkan pada Langkah 3 ke dalam kotak yang disediakan.
-2. Klik tombol **Mulai Bicara**. (Browser mungkin meminta izin untuk mengakses mikrofon, izinkan/allow).
-3. Mulailah berbicara dalam bahasa Indonesia. Misalnya: *"Tolong buatkan draf email untuk izin sakit hari ini."*
-4. Setelah Anda selesai berbicara, aplikasi akan memproses suara Anda, menghubungi AI, dan menuliskan teksnya ke dalam dokumen.
-5. AI kemudian akan berbicara membalas Anda, dan teks balasannya juga otomatis tertulis di Google Docs!
+2. Ketikkan pesan Anda di kotak teks yang tersedia. (Catatan: Fitur mikrofon saat ini tidak didukung karena kebijakan keamanan iframe Google Docs).
+3. Tekan 'Enter' atau klik tombol **Kirim Pesan**. Misalnya ketik: *"Tolong buatkan draf email untuk izin sakit hari ini."*
+4. Setelah Anda mengirim pesan, aplikasi akan menghubungi AI, dan menuliskan teksnya ke dalam dokumen.
+5. AI kemudian akan berbicara (jika didukung) membalas Anda, dan teks balasannya juga otomatis tertulis di Google Docs!
